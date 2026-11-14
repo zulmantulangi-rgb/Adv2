@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>MPI - Advertisement Text</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=Amiri:wght@400;700&family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    
+    <!-- Icons & Libraries -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+    
+    <!-- Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['Poppins', 'sans-serif'],
+                        arabic: ['Amiri', 'serif'],
+                    },
+                    colors: {
+                        brand: {
+                            blue: '#1e3a8a',
+                            light: '#3b82f6',
+                            orange: '#f97316',
+                            yellow: '#fbbf24',
+                        }
+                    },
+                    animation: {
+                        'float': 'float 3s ease-in-out infinite',
+                        'bounce-slow': 'bounce 3s infinite',
+                        'pulse-soft': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'zoom-in': 'zoomIn 0.8s ease-out forwards',
+                        'fade-in': 'fadeIn 0.5s ease-out forwards',
+                        'marquee': 'marquee 12s linear infinite',
+                    },
+                    keyframes: {
+                        float: {
+                            '0%, 100%': { transform: 'translateY(0)' },
+                            '50%': { transform: 'translateY(-15px)' },
+                        },
+                        zoomIn: {
+                            '0%': { transform: 'scale(0.8)', opacity: '0' },
+                            '100%': { transform: 'scale(1)', opacity: '1' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        marquee: {
+                            '0%': { transform: 'translateX(100vw)' },
+                            '100%': { transform: 'translateX(-100%)' }
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Custom Styles & Overrides */
+        body { background-color: #f8fafc; overflow-x: hidden; scroll-behavior: smooth; }
+        .glass-panel { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
+        .glass-dark { background: rgba(30, 58, 138, 0.85); backdrop-filter: blur(8px); }
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Drag & Drop Simulation Styles */
+        .match-item { transition: all 0.2s; cursor: pointer; }
+        .match-item.selected { border-color: #f97316; background-color: #fff7ed; transform: scale(1.02); }
+        .match-slot.filled { background-color: #dbeafe; border-color: #3b82f6; }
+        
+        /* Print Styles for PDF fallback */
+        @media print {
+            body * { visibility: hidden; }
+            #report-content, #report-content * { visibility: visible; }
+            #report-content { position: absolute; left: 0; top: 0; width: 100%; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body class="text-gray-800 antialiased h-screen w-screen overflow-hidden flex flex-col relative">
+
+    <!-- GLOBAL ALERT MODAL -->
+    <div id="custom-alert" class="fixed inset-0 z-[100] hidden flex-items-center justify-center bg-black/60 backdrop-blur-sm px-4">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center animate-zoom-in mx-auto mt-32">
+            <div id="alert-icon" class="text-5xl text-brand-orange mb-4"><i class="fas fa-exclamation-circle"></i></div>
+            <h3 id="alert-title" class="text-2xl font-bold text-gray-800 mb-2">Perhatian</h3>
+            <p id="alert-msg" class="text-gray-600 mb-6">Pesan peringatan di sini.</p>
+            <button onclick="closeAlert()" class="bg-brand-orange hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95">Mengerti</button>
+        </div>
+    </div>
+
+    <!-- 1. SPLASH SCREEN -->
+    <section id="splash" class="fixed inset-0 z-50 bg-brand-blue flex flex-col items-center justify-center transition-opacity duration-1000">
+        <div class="relative w-40 h-40 animate-bounce-slow mb-6">
+            <i class="fas fa-bullhorn text-brand-yellow text-8xl absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"></i>
+            <div class="absolute top-0 right-0 animate-ping h-8 w-8 rounded-full bg-brand-orange opacity-75"></div>
+        </div>
+        <h1 class="font-heading text-4xl md:text-6xl font-bold text-white tracking-wider animate-pulse-soft">AD<span class="text-brand-yellow">VERT</span></h1>
+        <p class="text-white/80 mt-2 text-lg tracking-widest uppercase animate-fade-in">Learning Media</p>
+    </section>
+
+    <!-- 2. HALAMAN COVER -->
+    <section id="cover" class="hidden absolute inset-0 bg-gradient-to-br from-brand-blue to-blue-900 flex flex-col justify-center items-center p-4 lg:p-8 overflow-hidden">
+        <!-- Floating Elements -->
+        <div class="absolute top-10 left-10 text-white/10 text-6xl animate-float"><i class="fas fa-language"></i></div>
+        <div class="absolute bottom-20 right-10 text-white/10 text-7xl animate-float" style="animation-delay: 1s;"><i class="fas fa-spell-check"></i></div>
+        <div class="absolute top-1/3 right-20 text-white/10 text-4xl animate-float font-bold font-heading" style="animation-delay: 2s;">TENSES</div>
+        <div class="absolute bottom-1/4 left-10 text-white/10 text-5xl animate-float font-bold font-heading" style="animation-delay: 1.5s;">GRAMMAR</div>
+        
+        <div class="absolute top-1/4 left-1/4 opacity-10 animate-pulse-soft">
+            <svg viewBox="0 0 60 30" width="120" height="60"><path d="M0,0H60V30H0Z" fill="#012169"/><path d="M0,0L60,30M60,0L0,30" stroke="#fff" stroke-width="6"/><path d="M0,0L60,30M60,0L0,30" stroke="#C8102E" stroke-width="4"/><path d="M30,0V30M0,15H60" stroke="#fff" stroke-width="10"/><path d="M30,0V30M0,15H60" stroke="#C8102E" stroke-width="6"/></svg>
+        </div>
+        
+        <div class="glass-dark rounded-3xl p-8 lg:p-12 w-full max-w-4xl shadow-2xl flex flex-col md:flex-row items-center gap-8 relative z-10 animate-zoom-in border border-white/20">
+            <div class="w-full md:w-1/2 flex justify-center relative">
+                <div class="w-64 h-64 bg-brand-light/30 rounded-full absolute blur-2xl"></div>
+                <div class="relative z-10 text-center">
+                    <i class="fas fa-bullhorn text-brand-yellow text-9xl animate-bounce-slow drop-shadow-2xl"></i>
+                    <div class="mt-4 flex gap-2 justify-center">
+                        <span class="bg-brand-orange text-white text-xs font-bold px-3 py-1 rounded-full animate-pulse-soft">50% OFF</span>
+                        <span class="bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-full">NEW</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="w-full md:w-1/2 text-center md:text-left flex flex-col gap-6">
+                <div>
+                    <div class="inline-block bg-white/20 backdrop-blur-sm text-white px-4 py-1.5 rounded-full text-sm font-semibold mb-4 border border-white/30">
+                        <i class="fas fa-graduation-cap mr-2"></i> Bahasa Inggris • Kelas VIII (Fase D)
+                    </div>
+                    <h1 class="font-heading text-5xl md:text-6xl font-extrabold text-white leading-tight mb-2">
+                        ADVERTISEMENT <br> <span class="text-brand-yellow">TEXT</span>
+                    </h1>
+                    <p class="text-brand-yellow/90 font-semibold text-xl italic mb-4">"Be Creative, Be Persuasive!"</p>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <button onclick="showModal('dev-modal')" class="flex-1 bg-white/10 hover:bg-white/20 text-white border border-white/40 font-semibold py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2">
+                        <i class="fas fa-id-card"></i> Info Pengembang
+                    </button>
+                    <button onclick="showModal('tujuan-modal')" class="flex-1 bg-white/10 hover:bg-white/20 text-white border border-white/40 font-semibold py-3 px-4 rounded-xl transition-all flex items-center justify-center gap-2">
+                        <i class="fas fa-bullseye"></i> Tujuan Belajar
+                    </button>
+                </div>
+                
+                <button onclick="navigate('form-section')" class="w-full bg-gradient-to-r from-brand-orange to-yellow-500 hover:from-orange-600 hover:to-yellow-600 text-white font-bold text-xl py-4 rounded-2xl shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1 animate-pulse-soft flex items-center justify-center gap-3 mt-2 border-2 border-white/50">
+                    LET'S START <i class="fas fa-rocket"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modals -->
+    <div id="dev-modal" class="fixed inset-0 z-[60] hidden flex-items-center justify-center bg-black/70 backdrop-blur-md px-4 opacity-0 transition-opacity">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden mx-auto mt-20 transform scale-95 transition-transform duration-300">
+            <div class="h-32 bg-brand-blue relative">
+                <div class="absolute -bottom-16 left-1/2 transform -translate-x-1/2">
+                    <div class="w-32 h-32 rounded-full border-4 border-white overflow-hidden bg-gray-200 shadow-xl flex items-center justify-center text-4xl text-gray-400 font-bold">
+                        <img src="https://iili.io/o9H8J2V.jpg" alt="Zulkifli Mantulangi" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';" class="w-full h-full object-cover">
+                        <span style="display: none;">ZM</span>
+                    </div>
+                </div>
+            </div>
+            <div class="pt-20 pb-8 px-6 text-center">
+                <h2 class="text-2xl font-bold text-gray-800 font-heading">Zulkifli Mantulangi, S.S., Gr</h2>
+                <p class="text-brand-orange font-semibold mt-1"><i class="fas fa-school mr-1"></i> MTs. Negeri 1 Boalemo</p>
+                <div class="mt-4 flex flex-col gap-2 text-gray-600 text-sm">
+                    <p><i class="fas fa-envelope mr-2 text-brand-blue"></i> zulmantulangi@gmail.com</p>
+                    <p><i class="fas fa-laptop-code mr-2 text-brand-blue"></i> Senior Instructional Designer & Web Dev</p>
+                </div>
+                <button onclick="closeModal('dev-modal')" class="mt-8 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-2 px-6 rounded-full w-full transition-colors border border-gray-300">Kembali ke Cover</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="tujuan-modal" class="fixed inset-0 z-[60] hidden flex-items-center justify-center bg-black/70 backdrop-blur-md px-4 opacity-0 transition-opacity">
+        <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden mx-auto mt-10 max-h-[90vh] flex flex-col transform scale-95 transition-transform duration-300">
+            <div class="bg-gradient-to-r from-brand-orange to-brand-yellow p-6 text-white text-center">
+                <h2 class="text-2xl font-bold font-heading"><i class="fas fa-bullseye mb-2 text-3xl"></i><br>Tujuan Pembelajaran</h2>
+            </div>
+            <div class="p-6 overflow-y-auto hide-scroll flex-1">
+                <p class="text-gray-700 leading-relaxed font-semibold text-lg text-center bg-blue-50 p-4 rounded-xl border border-blue-100 mb-6">
+                    Memahami dan merespons Advertisement Text sederhana (tertulis/multimodal) dengan mengidentifikasi tujuan komunikatif, informasi tersurat/tersirat, dan unsur persuasif dalam konteks kehidupan sehari-hari.
+                </p>
+                
+                <div class="bg-emerald-50 rounded-xl p-4 border border-emerald-100 mb-4">
+                    <h3 class="text-emerald-700 font-bold mb-2 flex items-center gap-2"><i class="fas fa-book-quran"></i> Integrasi Al-Qur'an</h3>
+                    <p class="font-arabic text-right text-2xl mb-2 text-gray-800 leading-loose">وَيْلٌ لِّلْمُطَفِّفِينَ</p>
+                    <p class="text-sm text-gray-600 italic mb-2">"Kecelakaan besarlah bagi orang-orang yang curang (dalam menakar dan menimbang)." (QS. Al-Mutaffifin: 1)</p>
+                    <p class="text-xs text-gray-700"><strong>Hikmah:</strong> Dalam membuat iklan (promosi), kita dilarang melakukan kebohongan atau manipulasi info. Harus jujur sesuai fakta produk.</p>
+                </div>
+
+                <div class="bg-rose-50 rounded-xl p-4 border border-rose-100">
+                    <h3 class="text-rose-700 font-bold mb-2 flex items-center gap-2"><i class="fas fa-heart"></i> Kurikulum Berbasis Cinta (KBC)</h3>
+                    <ul class="text-sm text-gray-700 space-y-2">
+                        <li><i class="fas fa-check-circle text-rose-500 mr-2"></i><strong>Cinta Alam:</strong> Promosi wisata lokal dengan pesan kelestarian.</li>
+                        <li><i class="fas fa-check-circle text-rose-500 mr-2"></i><strong>Cinta Sesama:</strong> Berbisnis dengan etika, saling menguntungkan.</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="p-4 border-t bg-gray-50">
+                <button onclick="closeModal('tujuan-modal')" class="bg-gray-800 hover:bg-gray-900 text-white font-semibold py-3 px-6 rounded-xl w-full transition-colors">Kembali ke Cover</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. FORM INPUT IDENTITAS -->
+    <section id="form-section" class="hidden absolute inset-0 bg-blue-50 flex items-center justify-center p-4">
+        <div class="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full animate-fade-in relative overflow-hidden border-t-8 border-brand-blue">
+            <div class="absolute -right-10 -top-10 text-blue-100 text-9xl opacity-50"><i class="fas fa-user-circle"></i></div>
+            <h2 class="text-3xl font-heading font-bold text-gray-800 mb-2 relative z-10">Data Diri</h2>
+            <p class="text-gray-500 mb-8 relative z-10">Silakan isi identitasmu sebelum mulai belajar.</p>
+            
+            <div class="space-y-5 relative z-10">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Nama Lengkap</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400"><i class="fas fa-user"></i></div>
+                        <input type="text" id="student-name" placeholder="Masukkan nama lengkap..." class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-orange outline-none bg-gray-50 focus:bg-white" autocomplete="off">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Kelas</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400"><i class="fas fa-users"></i></div>
+                        <select id="student-class" class="w-full pl-10 pr-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-brand-orange outline-none bg-gray-50 focus:bg-white appearance-none">
+                            <option value="" disabled selected>Pilih Kelas...</option>
+                            <option value="VIII-A">Kelas VIII-A</option>
+                            <option value="VIII-B">Kelas VIII-B</option>
+                            <option value="VIII-C">Kelas VIII-C</option>
+                            <option value="VIII-D">Kelas VIII-D</option>
+                            <option value="VIII-E">Kelas VIII-E</option>
+                            <option value="VIII-F">Kelas VIII-F</option>
+                            <option value="VIII-G">Kelas VIII-G</option>
+                        </select>
+                        <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none text-gray-500"><i class="fas fa-chevron-down"></i></div>
+                    </div>
+                </div>
+                <button onclick="submitForm()" class="w-full bg-brand-blue hover:bg-blue-800 text-white font-bold py-3.5 rounded-xl shadow-md transition-all mt-4 flex items-center justify-center gap-2">
+                    Lanjutkan <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. PENGANTAR & PANDUAN (SLIDER) -->
+    <section id="guide-section" class="hidden absolute inset-0 bg-white flex flex-col">
+        <div class="bg-gradient-to-r from-brand-blue to-blue-800 p-6 text-white shadow-md relative overflow-hidden rounded-b-[2rem]">
+            <div class="relative z-10">
+                <h2 class="text-2xl md:text-3xl font-heading font-bold" id="welcome-text">Selamat Datang!</h2>
+                <p class="text-blue-100 mt-1">Panduan Penggunaan Media Belajar</p>
+            </div>
+            <i class="fas fa-map-signs absolute right-6 top-1/2 transform -translate-y-1/2 text-5xl text-white/20"></i>
+        </div>
+        <div class="flex-1 overflow-hidden relative" id="guide-slider-container"></div>
+        <div class="p-6 bg-gray-50 border-t flex justify-between items-center pb-8">
+            <button id="guide-prev" onclick="prevGuide()" class="px-6 py-2.5 rounded-full text-brand-blue font-semibold border-2 border-brand-blue disabled:opacity-30 transition-all"><i class="fas fa-chevron-left mr-2"></i> Kembali</button>
+            <div class="flex gap-2" id="guide-dots"></div>
+            <button id="guide-next" onclick="nextGuide()" class="px-6 py-2.5 rounded-full bg-brand-orange text-white font-semibold shadow-md transition-all hover:bg-orange-600">Lanjut <i class="fas fa-chevron-right ml-2"></i></button>
+            <button id="guide-start" onclick="navigate('main-menu')" class="hidden px-6 py-2.5 rounded-full bg-green-500 text-white font-bold shadow-md transition-all animate-pulse-soft">Masuk Menu Utama <i class="fas fa-home ml-2"></i></button>
+        </div>
+    </section>
+
+    <!-- 5. MENU UTAMA (DASHBOARD) -->
+    <section id="main-menu" class="hidden absolute inset-0 bg-gray-100 flex flex-col">
+        <div class="bg-white p-4 shadow-sm flex justify-between items-center z-10 sticky top-0">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-brand-blue text-white rounded-full flex items-center justify-center font-bold text-lg" id="profile-initial">A</div>
+                <div>
+                    <h3 class="font-bold text-gray-800 text-sm" id="display-name">Nama Siswa</h3>
+                    <p class="text-xs text-brand-orange font-semibold" id="display-class">Kelas VIII</p>
+                </div>
+            </div>
+            <div class="bg-blue-50 px-3 py-1 rounded-lg border border-blue-100 flex items-center gap-2">
+                <i class="fas fa-medal text-brand-yellow text-lg"></i>
+                <span class="text-sm font-bold text-brand-blue" id="dashboard-score">Skor: 0</span>
+            </div>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-4 md:p-8">
+            <div class="max-w-4xl mx-auto">
+                <div class="text-center mb-8 mt-4 animate-fade-in">
+                    <h2 class="text-3xl font-heading font-extrabold text-gray-800 mb-2">Pilih Misi Belajarmu!</h2>
+                    <p class="text-gray-600">Selesaikan misi secara berurutan untuk membuka tahap berikutnya.</p>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div id="card-belajar" onclick="startMisi('belajar')" class="bg-white rounded-3xl p-6 shadow-lg border-2 border-brand-light cursor-pointer transform transition-all hover:-translate-y-2 relative overflow-hidden group">
+                        <div class="absolute top-0 right-0 w-24 h-24 bg-blue-50 rounded-bl-full -z-0"></div>
+                        <div class="relative z-10 text-center flex flex-col items-center">
+                            <div class="w-20 h-20 bg-blue-100 text-brand-blue rounded-full flex items-center justify-center text-4xl mb-4 group-hover:scale-110 transition-transform">
+                                <i class="fas fa-book-open"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold text-gray-800 mb-1">BELAJAR</h3>
+                            <p class="text-sm text-gray-500 mb-4">6 Materi Interaktif</p>
+                            <span class="bg-brand-blue text-white text-xs font-bold px-4 py-1.5 rounded-full" id="status-belajar">TERBUKA <i class="fas fa-unlock ml-1"></i></span>
+                        </div>
+                    </div>
+
+                    <div id="card-bermain" onclick="startMisi('bermain')" class="bg-gray-50 rounded-3xl p-6 shadow border-2 border-gray-200 cursor-not-allowed opacity-75 relative overflow-hidden group">
+                        <div class="absolute inset-0 bg-gray-200/50 backdrop-blur-[1px] z-20 flex items-center justify-center" id="lock-bermain">
+                            <i class="fas fa-lock text-4xl text-gray-500 drop-shadow-md"></i>
+                        </div>
+                        <div class="relative z-10 text-center flex flex-col items-center filter grayscale" id="content-bermain">
+                            <div class="w-20 h-20 bg-orange-100 text-brand-orange rounded-full flex items-center justify-center text-4xl mb-4">
+                                <i class="fas fa-gamepad"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold text-gray-800 mb-1">BERMAIN</h3>
+                            <p class="text-sm text-gray-500 mb-4">10 Tantangan Seru</p>
+                            <span class="bg-gray-500 text-white text-xs font-bold px-4 py-1.5 rounded-full" id="status-bermain">TERKUNCI <i class="fas fa-lock ml-1"></i></span>
+                        </div>
+                    </div>
+
+                    <div id="card-berlatih" onclick="startMisi('berlatih')" class="bg-gray-50 rounded-3xl p-6 shadow border-2 border-gray-200 cursor-not-allowed opacity-75 relative overflow-hidden group">
+                        <div class="absolute inset-0 bg-gray-200/50 backdrop-blur-[1px] z-20 flex items-center justify-center" id="lock-berlatih">
+                            <i class="fas fa-lock text-4xl text-gray-500 drop-shadow-md"></i>
+                        </div>
+                        <div class="relative z-10 text-center flex flex-col items-center filter grayscale" id="content-berlatih">
+                            <div class="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-4xl mb-4">
+                                <i class="fas fa-pen-nib"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold text-gray-800 mb-1">BERLATIH</h3>
+                            <p class="text-sm text-gray-500 mb-4">Asesmen 10 Soal</p>
+                            <span class="bg-gray-500 text-white text-xs font-bold px-4 py-1.5 rounded-full" id="status-berlatih">TERKUNCI <i class="fas fa-lock ml-1"></i></span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-8 text-center" id="btn-report-container" style="display: none;">
+                    <button onclick="navigate('report-section')" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform hover:scale-105 animate-bounce-slow">
+                        <i class="fas fa-file-contract mr-2"></i> Lihat Laporan Hasil Belajar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. LAYER BELAJAR -->
+    <section id="belajar-section" class="hidden absolute inset-0 bg-gray-50 flex flex-col">
+        <div class="bg-white h-14 border-b flex items-center px-4 justify-between sticky top-0 z-20">
+            <button onclick="navigate('main-menu')" class="text-gray-600 hover:text-brand-orange p-2"><i class="fas fa-arrow-left text-xl"></i></button>
+            <div class="font-bold text-brand-blue flex-1 text-center" id="materi-title">Materi 1 / 6</div>
+            <div class="w-10"></div>
+        </div>
+        <div class="bg-brand-blue text-white overflow-hidden whitespace-nowrap py-1.5 shadow-inner">
+            <div class="inline-block animate-marquee font-bold tracking-widest text-sm">Welcome to English Class!! 📚✨ Welcome to English Class!! 📚✨</div>
+        </div>
+        <div class="h-1.5 bg-gray-200 w-full"><div id="belajar-progress" class="h-full bg-brand-orange w-1/6 transition-all duration-300"></div></div>
+        <div class="flex-1 overflow-y-auto p-4 md:p-6 pb-32 scroll-smooth" id="belajar-content-area"></div>
+        <div class="absolute bottom-0 left-0 w-full bg-white border-t p-4 shadow-[0_-5px_15px_rgba(0,0,0,0.05)] flex justify-between items-center z-20">
+            <button id="belajar-prev" onclick="prevBelajar()" class="px-5 py-2.5 rounded-xl bg-gray-100 text-gray-700 font-semibold border disabled:opacity-30"><i class="fas fa-chevron-left mr-1"></i> Prev</button>
+            <div class="text-sm font-bold text-gray-500" id="belajar-counter">1/6</div>
+            <button id="belajar-next" onclick="nextBelajar()" class="px-5 py-2.5 rounded-xl bg-brand-blue text-white font-semibold shadow-md disabled:bg-gray-300 transition-colors">Next <i class="fas fa-chevron-right ml-1"></i></button>
+        </div>
+    </section>
+
+    <!-- 7 & 8. LAYER BERMAIN & BERLATIH -->
+    <section id="quiz-section" class="hidden absolute inset-0 bg-blue-50 flex flex-col">
+        <div class="bg-white h-14 border-b flex items-center px-4 justify-between sticky top-0 z-20 shadow-sm">
+            <button onclick="confirmExitQuiz()" class="text-gray-600 hover:text-red-500 p-2"><i class="fas fa-times text-xl"></i></button>
+            <div class="font-bold text-brand-blue flex flex-col items-center flex-1">
+                <span id="quiz-header-title" class="text-sm md:text-base uppercase tracking-wider">BERMAIN (TANTANGAN)</span>
+            </div>
+            <div class="font-bold text-brand-orange text-lg" id="quiz-counter">1/10</div>
+        </div>
+        <div id="quiz-marquee-bg" class="bg-brand-orange text-white overflow-hidden whitespace-nowrap py-1.5 shadow-inner">
+            <div id="quiz-marquee-text" class="inline-block animate-marquee font-bold tracking-widest text-sm">Let’s have some fun!!! 🎮</div>
+        </div>
+        <div class="flex-1 overflow-y-auto flex flex-col md:flex-row w-full pb-20">
+            <div class="w-full md:w-1/2 p-4 md:p-6 bg-white border-b md:border-r border-gray-200 overflow-y-auto">
+                <div class="flex items-center gap-2 mb-3">
+                    <span id="badge-level" class="text-xs font-bold px-2 py-1 rounded bg-blue-100 text-brand-blue hidden">Level 1</span>
+                    <h3 class="text-sm font-bold text-gray-500 uppercase flex items-center gap-2"><i class="fas fa-book-reader"></i> Stimulus Text</h3>
+                </div>
+                <div id="quiz-stimulus" class="prose prose-sm md:prose-base max-w-none text-gray-700 text-justify leading-relaxed"></div>
+            </div>
+            <div class="w-full md:w-1/2 p-4 md:p-6 bg-gray-50 overflow-y-auto">
+                <h2 id="quiz-question" class="text-lg md:text-xl font-bold text-gray-800 mb-6 leading-snug"></h2>
+                <div id="quiz-options-container" class="w-full"></div>
+                <div id="quiz-feedback" class="hidden mt-6 p-4 rounded-xl border animate-zoom-in"></div>
+            </div>
+        </div>
+        <div class="absolute bottom-0 left-0 w-full bg-white border-t p-4 flex justify-end z-20 shadow-[0_-5px_15px_rgba(0,0,0,0.05)]">
+            <button id="btn-submit-quiz" onclick="submitAnswer()" class="bg-brand-orange hover:bg-orange-600 text-white font-bold py-3 px-8 rounded-xl shadow-lg w-full md:w-auto">Cek Jawaban <i class="fas fa-check-circle ml-2"></i></button>
+            <button id="btn-next-quiz" onclick="nextQuizQuestion()" class="hidden bg-brand-blue hover:bg-blue-800 text-white font-bold py-3 px-8 rounded-xl shadow-lg w-full md:w-auto">Selanjutnya <i class="fas fa-arrow-right ml-2"></i></button>
+        </div>
+    </section>
+
+    <!-- 9. LAPORAN HASIL BELAJAR -->
+    <section id="report-section" class="hidden absolute inset-0 bg-gray-200 overflow-y-auto p-4 md:p-8">
+        <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-2xl overflow-hidden" id="report-content">
+            <div class="bg-gradient-to-r from-brand-blue to-blue-900 p-8 text-white relative border-b-8 border-brand-yellow">
+                <div class="absolute left-8 top-8 w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-lg p-1 overflow-hidden no-print-bg">
+                    <img src="https://iili.io/nyym2VV.md.jpg" alt="Logo Kemenag" class="w-full h-full object-contain">
+                </div>
+                <div class="absolute right-8 top-8 w-20 h-20 rounded-full border-2 border-white/50 overflow-hidden bg-white/20 flex items-center justify-center text-sm font-bold no-print text-center p-2">
+                    <img src="https://iili.io/o9H8J2V.jpg" alt="Dev" class="w-full h-full object-cover">
+                </div>
+                <div class="text-center mt-20 md:mt-0 md:pl-28 md:text-left">
+                    <h1 class="text-2xl md:text-3xl font-heading font-bold mb-1 uppercase tracking-wider">Laporan Hasil Belajar</h1>
+                    <h2 class="text-lg md:text-xl text-blue-200 mb-4">Media Pembelajaran Interaktif: Advertisement Text</h2>
+                    <div class="flex flex-col gap-1 text-sm border-t border-white/20 pt-4 mt-2">
+                        <p><i class="fas fa-chalkboard-teacher w-5"></i> <strong>Pengembang:</strong> Zulkifli Mantulangi, S.S., Gr</p>
+                        <p><i class="fas fa-school w-5"></i> <strong>Instansi:</strong> MTs. Negeri 1 Boalemo</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-8 pb-4">
+                <table class="w-full text-left mb-6 border-collapse">
+                    <tr>
+                        <th class="py-2 text-gray-500 w-1/3 border-b">Nama Siswa</th>
+                        <td class="py-2 font-bold text-lg border-b text-gray-800" id="rep-name">-</td>
+                    </tr>
+                    <tr>
+                        <th class="py-2 text-gray-500 border-b">Kelas</th>
+                        <td class="py-2 font-bold border-b text-gray-800" id="rep-class">-</td>
+                    </tr>
+                    <tr>
+                        <th class="py-2 text-gray-500 border-b">Waktu Penyelesaian</th>
+                        <td class="py-2 font-bold border-b text-gray-800" id="rep-date">-</td>
+                    </tr>
+                </table>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-orange-50 p-6 rounded-xl border border-orange-200 text-center">
+                        <h3 class="text-orange-800 font-bold mb-2 uppercase text-sm">Skor Misi Bermain</h3>
+                        <div class="text-5xl font-extrabold text-brand-orange mb-2" id="rep-bermain-score">0</div>
+                        <p class="text-sm text-orange-700">Tantangan Literasi & Gamifikasi</p>
+                    </div>
+                    <div class="bg-blue-50 p-6 rounded-xl border border-blue-200 text-center relative overflow-hidden">
+                        <h3 class="text-blue-800 font-bold mb-2 uppercase text-sm">Nilai Akhir (Berlatih)</h3>
+                        <div class="text-5xl font-extrabold text-brand-blue mb-2" id="rep-berlatih-score">0</div>
+                        <div class="inline-block bg-brand-yellow text-brand-blue px-3 py-1 rounded-full text-xs font-bold" id="rep-predikat">PREDIKAT</div>
+                    </div>
+                </div>
+
+                <h3 class="font-bold text-gray-800 mb-3 border-b pb-2">Rincian Penguasaan Kompetensi</h3>
+                <div class="space-y-3 mb-8 text-sm">
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded border">
+                        <span>Level 1 (Dasar/Pemahaman) - Soal 1-3</span>
+                        <span class="font-bold text-brand-blue" id="rep-l1">0%</span>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded border">
+                        <span>Level 2 (Aplikasi/Penerapan) - Soal 4-7</span>
+                        <span class="font-bold text-brand-blue" id="rep-l2">0%</span>
+                    </div>
+                    <div class="flex justify-between items-center p-3 bg-gray-50 rounded border">
+                        <span>Level 3 (HOTS/Penalaran) - Soal 8-10</span>
+                        <span class="font-bold text-brand-blue" id="rep-l3">0%</span>
+                    </div>
+                </div>
+
+                <div class="bg-rose-50 p-5 rounded-xl border border-rose-200 mb-8">
+                    <h3 class="text-rose-800 font-bold mb-2 flex items-center gap-2"><i class="fas fa-heart"></i> Catatan KBC</h3>
+                    <p class="text-sm text-rose-900 italic">"Ananda telah menunjukkan pemahaman yang baik dalam menganalisis teks iklan dengan menjunjung tinggi nilai kejujuran (merujuk QS. Al-Mutaffifin) dan peduli terhadap promosi potensi lokal Gorontalo yang ramah lingkungan."</p>
+                </div>
+
+                <div class="flex justify-end mt-12 mb-8">
+                    <div class="text-center">
+                        <p class="text-sm text-gray-600 mb-16">Tilamuta, <span id="ttd-date"></span><br>Guru Mata Pelajaran,</p>
+                        <p class="font-bold text-gray-800 underline">Zulkifli Mantulangi, S.S., Gr</p>
+                        <p class="text-xs text-gray-500">NIP. 199007072019031014</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="max-w-4xl mx-auto mt-6 flex flex-col sm:flex-row gap-4 no-print pb-10">
+            <button onclick="generatePDF()" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-4 rounded-xl shadow-lg transition-transform hover:scale-105 flex justify-center items-center gap-2">
+                <i class="fas fa-download"></i> Unduh / Cetak Laporan PDF
+            </button>
+            <button onclick="navigate('main-menu')" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-4 rounded-xl shadow-lg transition-transform hover:scale-105 flex justify-center items-center gap-2">
+                <i class="fas fa-home"></i> Kembali ke Menu Utama
+            </button>
+        </div>
+    </section>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // 1. DEKLARASI URL GAS DI SINI
+        const GAS_URL = "https://script.google.com/macros/s/AKfycbyxrVeClORaTIFqUWL62vSdjnezXWvwBWdK2mZKdmYfbgC71ohWMl88952uuYVKR3af6A/exec";
+
+        /* =========================================================
+           AUDIO SYSTEM (Tone.js)
+        ========================================================= */
+        let audioInit = false;
+        let synth, polySynth, wrongSynth;
+
+        async function initAudio() {
+            if(!audioInit) {
+                await Tone.start();
+                synth = new Tone.PolySynth(Tone.Synth, { 
+                    oscillator: { type: "sine" }, 
+                    envelope: { attack: 0.01, decay: 0.1, sustain: 0, release: 0.1 } 
+                }).toDestination();
+                synth.volume.value = -5;
+
+                polySynth = new Tone.PolySynth(Tone.Synth).toDestination();
+                polySynth.volume.value = -5;
+
+                wrongSynth = new Tone.PolySynth(Tone.Synth, { 
+                    oscillator: { type: "triangle" }, 
+                    envelope: { attack: 0.1, decay: 0.2, sustain: 0.1, release: 0.5 } 
+                }).toDestination();
+                wrongSynth.volume.value = -5;
+
+                audioInit = true;
+            }
+        }
+
+        function playClick() { if(audioInit) synth.triggerAttackRelease("G5", "32n", Tone.now()); }
+        function playNext() { if(audioInit) synth.triggerAttackRelease("C6", "16n", Tone.now()); }
+        function playCorrect() { if(audioInit) polySynth.triggerAttackRelease(["C5", "E5", "G5"], "8n", Tone.now()); }
+        function playWrong() { if(audioInit) wrongSynth.triggerAttackRelease("C3", "4n", Tone.now()); }
+
+        /* =========================================================
+           STATE MANAGEMENT & UTILS
+        ========================================================= */
+        const state = {
+            studentName: '',
+            studentClass: '',
+            belajarCompleted: false,
+            bermainCompleted: false,
+            berlatihCompleted: false,
+            bermainScore: 0,
+            berlatihScore: 0,
+            currentBelajarSlide: 0,
+            currentQuizMode: null, 
+            currentQuizIndex: 0,
+            quizScoreDetail: { L1: {correct:0, total:3}, L2: {correct:0, total:4}, L3: {correct:0, total:3} },
+            berlatihAnswers: [] // Tambahan: Menyimpan jawaban spesifik user saat berlatih
+        };
+
+        function navigate(sectionId) {
+            playClick();
+            document.querySelectorAll('section').forEach(s => {
+                if(s.id !== 'splash') s.classList.add('hidden');
+            });
+            const target = document.getElementById(sectionId);
+            if(target) {
+                target.classList.remove('hidden');
+                target.scrollTop = 0;
+            }
+        }
+
+        function showAlert(title, msg) {
+            document.getElementById('alert-title').innerText = title;
+            document.getElementById('alert-msg').innerText = msg;
+            document.getElementById('custom-alert').classList.remove('hidden');
+            document.getElementById('custom-alert').classList.add('flex');
+        }
+        function closeAlert() {
+            document.getElementById('custom-alert').classList.add('hidden');
+            document.getElementById('custom-alert').classList.remove('flex');
+        }
+
+        function showModal(id) {
+            playClick();
+            const modal = document.getElementById(id);
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                modal.querySelector('div').classList.remove('scale-95');
+                modal.querySelector('div').classList.add('scale-100');
+            }, 10);
+        }
+        function closeModal(id) {
+            playClick();
+            const modal = document.getElementById(id);
+            modal.classList.add('opacity-0');
+            modal.querySelector('div').classList.remove('scale-100');
+            modal.querySelector('div').classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }, 300);
+        }
+
+        window.onload = () => {
+            setTimeout(() => {
+                document.getElementById('splash').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('splash').classList.add('hidden');
+                    navigate('cover');
+                }, 1000);
+            }, 1500);
+        };
+
+        async function submitForm() {
+            await initAudio(); 
+            playNext();
+            
+            const name = document.getElementById('student-name').value.trim();
+            const cls = document.getElementById('student-class').value;
+
+            if(!name || !cls) {
+                showAlert('Data Belum Lengkap', 'Silakan isi Nama Lengkap dan Kelas terlebih dahulu ya!');
+                return;
+            }
+
+            state.studentName = name;
+            state.studentClass = cls;
+
+            document.getElementById('display-name').innerText = name;
+            document.getElementById('display-class').innerText = cls;
+            document.getElementById('profile-initial').innerText = name.charAt(0).toUpperCase();
+            
+            buildGuideSlides();
+            navigate('guide-section');
+        }
+
+        /* =========================================================
+           GUIDE & MENU
+        ========================================================= */
+        const guides = [
+            { icon: 'fa-book-open', title: 'Belajar Mendalam', desc: 'Pelajari 6 materi esensial Advertisement Text yang dilengkapi dengan kearifan lokal Gorontalo dan nilai Islami.', color: 'text-brand-blue' },
+            { icon: 'fa-gamepad', title: 'Bermain Sambil Belajar', desc: 'Selesaikan 10 tantangan interaktif. Kamu harus menamatkan materi "Belajar" untuk membuka fitur ini.', color: 'text-brand-orange' },
+            { icon: 'fa-pen-nib', title: 'Berlatih Ujian', desc: 'Uji pemahamanmu lewat 10 soal level HOTS. Fitur ini terbuka setelah kamu menyelesaikan mode "Bermain".', color: 'text-emerald-600' }
+        ];
+        let currentGuide = 0;
+
+        function buildGuideSlides() {
+            document.getElementById('welcome-text').innerText = `Hai, ${state.studentName}!`;
+            const container = document.getElementById('guide-slider-container');
+            const dots = document.getElementById('guide-dots');
+            
+            container.innerHTML = '';
+            dots.innerHTML = '';
+
+            guides.forEach((g, i) => {
+                container.innerHTML += `
+                    <div class="absolute inset-0 p-8 flex flex-col items-center justify-center text-center transition-all duration-500 transform ${i === 0 ? 'translate-x-0 opacity-100 z-10' : 'translate-x-full opacity-0 z-0'}" id="guide-slide-${i}">
+                        <div class="w-32 h-32 rounded-full bg-gray-50 border-4 border-gray-100 flex items-center justify-center mb-6 shadow-inner">
+                            <i class="fas ${g.icon} text-6xl ${g.color}"></i>
+                        </div>
+                        <h3 class="text-2xl font-bold text-gray-800 mb-3">${g.title}</h3>
+                        <p class="text-gray-600 leading-relaxed max-w-md">${g.desc}</p>
+                    </div>
+                `;
+                dots.innerHTML += `<div class="w-2.5 h-2.5 rounded-full transition-all duration-300 ${i === 0 ? 'bg-brand-blue w-6' : 'bg-gray-300'}" id="dot-${i}"></div>`;
+            });
+        }
+
+        function updateGuideUI() {
+            guides.forEach((_, i) => {
+                const slide = document.getElementById(`guide-slide-${i}`);
+                const dot = document.getElementById(`dot-${i}`);
+                
+                if(i === currentGuide) {
+                    slide.className = 'absolute inset-0 p-8 flex flex-col items-center justify-center text-center transition-all duration-500 transform translate-x-0 opacity-100 z-10';
+                    dot.className = 'w-6 h-2.5 rounded-full transition-all duration-300 bg-brand-blue';
+                } else if(i < currentGuide) {
+                    slide.className = 'absolute inset-0 p-8 flex flex-col items-center justify-center text-center transition-all duration-500 transform -translate-x-full opacity-0 z-0';
+                    dot.className = 'w-2.5 h-2.5 rounded-full transition-all duration-300 bg-gray-300';
+                } else {
+                    slide.className = 'absolute inset-0 p-8 flex flex-col items-center justify-center text-center transition-all duration-500 transform translate-x-full opacity-0 z-0';
+                    dot.className = 'w-2.5 h-2.5 rounded-full transition-all duration-300 bg-gray-300';
+                }
+            });
+
+            document.getElementById('guide-prev').disabled = currentGuide === 0;
+            
+            if(currentGuide === guides.length - 1) {
+                document.getElementById('guide-next').classList.add('hidden');
+                document.getElementById('guide-start').classList.remove('hidden');
+            } else {
+                document.getElementById('guide-next').classList.remove('hidden');
+                document.getElementById('guide-start').classList.add('hidden');
+            }
+        }
+        function nextGuide() { if(currentGuide < guides.length - 1) { currentGuide++; updateGuideUI(); playClick(); } }
+        function prevGuide() { if(currentGuide > 0) { currentGuide--; updateGuideUI(); playClick(); } }
+
+        function startMisi(misi) {
+            playClick();
+            if(misi === 'belajar') {
+                state.currentBelajarSlide = 0;
+                renderBelajarSlide();
+                navigate('belajar-section');
+            } 
+            else if(misi === 'bermain') {
+                if(!state.belajarCompleted) return showAlert('Misi Terkunci! 🔒', 'Kamu harus menyelesaikan menu BELAJAR terlebih dahulu ya.');
+                initQuizMode('bermain');
+            }
+            else if(misi === 'berlatih') {
+                if(!state.bermainCompleted) return showAlert('Misi Terkunci! 🔒', 'Selesaikan 10 Tantangan di menu BERMAIN untuk membuka Ujian.');
+                initQuizMode('berlatih');
+            }
+        }
+
+        function unlockMenu(misi) {
+            const card = document.getElementById(`card-${misi}`);
+            const lock = document.getElementById(`lock-${misi}`);
+            const content = document.getElementById(`content-${misi}`);
+            const status = document.getElementById(`status-${misi}`);
+
+            if(!card) return;
+
+            card.classList.remove('cursor-not-allowed', 'opacity-75', 'bg-gray-50');
+            card.classList.add('bg-white', 'border-brand-light', 'cursor-pointer', 'transform', 'transition-all', 'hover:-translate-y-2');
+            if(misi === 'bermain') card.innerHTML += `<div class="absolute top-0 right-0 w-24 h-24 bg-orange-50 rounded-bl-full -z-0"></div>`;
+            if(misi === 'berlatih') card.innerHTML += `<div class="absolute top-0 right-0 w-24 h-24 bg-emerald-50 rounded-bl-full -z-0"></div>`;
+            
+            lock.classList.add('hidden');
+            content.classList.remove('filter', 'grayscale');
+            
+            status.innerHTML = 'TERBUKA <i class="fas fa-unlock ml-1"></i>';
+            if(misi === 'bermain') status.className = 'bg-brand-orange text-white text-xs font-bold px-4 py-1.5 rounded-full';
+            if(misi === 'berlatih') status.className = 'bg-emerald-600 text-white text-xs font-bold px-4 py-1.5 rounded-full';
+        }
+
+        /* =========================================================
+           DATA MATERI & KUIS (DISEDERHANAKAN AGAR KODE RINGKAS)
+        ========================================================= */
+        const materiData = [
+            {
+                title: "1. Definition & Purpose",
+                content: `<p class="mb-3"><strong>Advertisement Text (Teks Iklan)</strong> adalah teks publisitas yang bertujuan untuk mendorong, membujuk (persuade), dan meyakinkan masyarakat agar membeli produk, menggunakan jasa, atau mengikuti suatu acara.</p>`,
+                miniQuiz: { q: "What is the main purpose of an advertisement text?", opts: ["A. To entertain.", "B. To persuade people to buy or use something.", "C. To explain."], ans: 1 }
+            },
+            {
+                title: "2. Generic Structure",
+                content: `<p class="mb-3">Sebuah iklan yang baik memiliki struktur: Title/Headline, Explanation/Body, dan Action/Contact.</p>`,
+                miniQuiz: { q: "Which part of the ad contains phone numbers?", opts: ["A. Title", "B. Explanation", "C. Action/Contact Info"], ans: 2 }
+            },
+            {
+                title: "3. Language Features - Part 1",
+                content: `<p class="mb-3">Iklan menggunakan kata bujukan (Persuasive) dan kalimat perintah (Imperative).</p>`,
+                miniQuiz: { q: "Which one is an imperative sentence?", opts: ["A. The food is delicious.", "B. Taste the best seafood today!", "C. We are located at Desa Bajo."], ans: 1 }
+            },
+            {
+                title: "4. Language Features - Part 2",
+                content: `<p class="mb-3">Iklan ditujukan kepada Target Audience dan menggunakan Simple Present Tense.</p>`,
+                miniQuiz: { q: "Identify the persuasive word: 'Get this exclusive discount!'", opts: ["A. Get", "B. Exclusive", "C. Students"], ans: 1 }
+            },
+            {
+                title: "5. Kinds of Advertisement",
+                content: `<p class="mb-3">3 jenis utama: Product Ad, Service Ad, dan Event/Job Ad.</p>`,
+                miniQuiz: { q: "An advertisement promoting a Festival belongs to...", opts: ["A. Product Ad", "B. Service Ad", "C. Event Ad"], ans: 2 }
+            },
+            {
+                title: "6. Fact vs Opinion",
+                content: `<p class="mb-3">Fakta bisa dibuktikan, sedangkan opini adalah pendapat subjektif.</p>`,
+                miniQuiz: { q: "Which is a FACT?", opts: ["A. Best seafood in town.", "B. Located near KM. 0 Tilamuta.", "C. Wonderful taste."], ans: 1 }
+            }
+        ];
+
+        let miniQuizSolved = false;
+
+        function renderBelajarSlide() {
+            const data = materiData[state.currentBelajarSlide];
+            const contentArea = document.getElementById('belajar-content-area');
+            const progress = document.getElementById('belajar-progress');
+            
+            document.getElementById('materi-title').innerText = `Materi ${state.currentBelajarSlide + 1} / 6`;
+            document.getElementById('belajar-counter').innerText = `${state.currentBelajarSlide + 1}/6`;
+            progress.style.width = `${((state.currentBelajarSlide + 1) / 6) * 100}%`;
+            
+            miniQuizSolved = false;
+            updateBelajarNav();
+
+            contentArea.innerHTML = `
+                <div class="max-w-2xl mx-auto bg-white p-6 md:p-8 rounded-2xl shadow-sm border animate-fade-in">
+                    <h2 class="text-2xl font-heading font-bold text-brand-blue mb-4 pb-2 border-b-2 border-brand-orange inline-block">${data.title}</h2>
+                    <div class="text-gray-700 leading-relaxed text-lg">${data.content}</div>
+                    <div class="mt-8 pt-6 border-t-2 border-dashed border-gray-300">
+                        <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="fas fa-tasks text-brand-orange"></i> Quick Challenge! (Wajib dijawab)</h3>
+                        <p class="text-gray-700 font-semibold mb-3 h-auto whitespace-normal break-words">${data.miniQuiz.q}</p>
+                        <div class="space-y-2">
+                            ${data.miniQuiz.opts.map((opt, idx) => `
+                                <button onclick="checkMiniQuiz(${idx}, ${data.miniQuiz.ans}, this)" class="mini-opt w-full text-left p-3 rounded-lg border hover:bg-blue-50 transition-colors border-gray-300 h-auto whitespace-normal break-words">${opt}</button>
+                            `).join('')}
+                        </div>
+                        <div id="mini-feedback" class="mt-3 hidden text-sm font-bold"></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function checkMiniQuiz(selectedIdx, correctIdx, btnEl) {
+            if(miniQuizSolved) return; 
+            const feedback = document.getElementById('mini-feedback');
+            
+            if(selectedIdx === correctIdx) {
+                playCorrect();
+                btnEl.classList.add('bg-green-100', 'border-green-500', 'text-green-800');
+                feedback.innerHTML = '<i class="fas fa-check-circle text-green-500"></i> Tepat sekali!';
+                feedback.classList.add('text-green-600', 'block');
+                feedback.classList.remove('hidden');
+                miniQuizSolved = true;
+                updateBelajarNav();
+            } else {
+                playWrong();
+                btnEl.classList.add('bg-red-100', 'border-red-500', 'text-red-800');
+                feedback.innerHTML = '<i class="fas fa-times-circle text-red-500"></i> Kurang tepat, coba lagi ya!';
+                feedback.classList.add('text-red-600', 'block');
+                feedback.classList.remove('hidden');
+                setTimeout(() => {
+                    btnEl.classList.remove('bg-red-100', 'border-red-500', 'text-red-800');
+                    feedback.classList.add('hidden');
+                }, 1500);
+            }
+        }
+
+        function updateBelajarNav() {
+            document.getElementById('belajar-prev').disabled = state.currentBelajarSlide === 0;
+            const nextBtn = document.getElementById('belajar-next');
+            nextBtn.disabled = !miniQuizSolved;
+            
+            if(state.currentBelajarSlide === 5) {
+                nextBtn.innerHTML = 'Selesaikan <i class="fas fa-flag-checkered ml-1"></i>';
+                if(miniQuizSolved) nextBtn.classList.add('animate-pulse-soft', 'bg-green-500');
+            } else {
+                nextBtn.innerHTML = 'Next <i class="fas fa-chevron-right ml-1"></i>';
+                nextBtn.classList.remove('animate-pulse-soft', 'bg-green-500');
+                if(miniQuizSolved) nextBtn.classList.add('bg-brand-blue');
+            }
+        }
+
+        function nextBelajar() {
+            if(!miniQuizSolved) return;
+            playNext();
+            if(state.currentBelajarSlide < 5) {
+                state.currentBelajarSlide++;
+                renderBelajarSlide();
+            } else {
+                state.belajarCompleted = true;
+                unlockMenu('bermain');
+                showAlert('Alhamdulillah! 🎉', 'Kamu telah menyelesaikan semua materi Belajar. Sekarang Misi BERMAIN sudah terbuka!');
+                navigate('main-menu');
+            }
+        }
+        function prevBelajar() {
+            if(state.currentBelajarSlide > 0) { playClick(); state.currentBelajarSlide--; renderBelajarSlide(); }
+        }
+
+        /* --- Kumpulan Soal --- */
+        const bermainData = [
+            { type: 'mc', stimulus: `GRAND OPENING RESTO...`, q: "Main purpose?", opts: ["A", "B", "C", "D"], ans: 1 },
+            { type: 'tf', stimulus: `Text Resto...`, q: "True or False?", opts: ["True", "False"], ans: 1 },
+            { type: 'multiselect', stimulus: `Eco Resort...`, q: "Select two:", opts: ["A", "B", "C", "D"], ans: [1, 2] },
+            { type: 'match', stimulus: `Match structure...`, q: "Match segments", pairs: [{left: "A", rightId: 0}], rightOptions: ["H"], ans: [0] },
+            { type: 'mc', stimulus: `Fun Run...`, q: "What will participants get?", opts: ["A", "B", "C", "D"], ans: 2 },
+            { type: 'sort', stimulus: `Arrange sentences...`, q: "Tap in order", items: ["A", "B", "C", "D"], ans: [1, 3, 2, 0] },
+            { type: 'mc', stimulus: `Clean up...`, q: "Kind of ad?", opts: ["A", "B", "C", "D"], ans: 2 },
+            { type: 'tf', stimulus: `Clean up...`, q: "True/False?", opts: ["True", "False"], ans: 1 },
+            { type: 'mc', stimulus: `Course...`, q: "How much?", opts: ["A", "B", "C", "D"], ans: 1 },
+            { type: 'mc', stimulus: `Smartphone...`, q: "Example of?", opts: ["A", "B", "C", "D"], ans: 1 }
+        ];
+
+        const berlatihData = [
+            { level: 1, type: 'mc', stimulus: `Snack Box...`, q: "How many snacks?", opts: ["A", "B", "C", "D"], ans: 1 },
+            { level: 1, type: 'mc', stimulus: `Snack Box...`, q: "How to order?", opts: ["A", "B", "C", "D"], ans: 2 },
+            { level: 1, type: 'mc', stimulus: `Toko Maju...`, q: "What products?", opts: ["A", "B", "C", "D"], ans: 2 },
+            { level: 2, type: 'mc', stimulus: `Toko Maju...`, q: "If buy later?", opts: ["A", "B", "C", "D"], ans: 3 },
+            { level: 2, type: 'mc', stimulus: `Homestay...`, q: "Conclusion?", opts: ["A", "B", "C", "D"], ans: 1 },
+            { level: 2, type: 'mc', stimulus: `Homestay...`, q: "Target audience?", opts: ["A", "B", "C", "D"], ans: 2 },
+            { level: 2, type: 'mc', stimulus: `Laundry...`, q: "Why eco-friendly?", opts: ["A", "B", "C", "D"], ans: 1 },
+            { level: 3, type: 'mc', stimulus: `Laundry...`, q: "Total cost?", opts: ["A", "B", "C", "D"], ans: 2 },
+            { level: 3, type: 'mc', stimulus: `Book fair...`, q: "Which is true?", opts: ["A", "B", "C", "D"], ans: 1 },
+            { level: 3, type: 'mc', stimulus: `Course...`, q: "Why testimonial?", opts: ["A", "B", "C", "D"], ans: 2 }
+        ];
+
+        let activeQuizData = [];
+        let userSelectedAnswers = [];
+
+        function initQuizMode(mode) {
+            state.currentQuizMode = mode;
+            state.currentQuizIndex = 0;
+            activeQuizData = mode === 'bermain' ? bermainData : berlatihData;
+            
+            if (mode === 'bermain') {
+                document.getElementById('quiz-header-title').innerText = 'BERMAIN (TANTANGAN)';
+                state.bermainScore = 0;
+            } else {
+                document.getElementById('quiz-header-title').innerText = 'BERLATIH (ASESMEN)';
+                state.quizScoreDetail = { L1: {correct:0, total:3}, L2: {correct:0, total:4}, L3: {correct:0, total:3} };
+                state.berlatihScore = 0;
+                state.berlatihAnswers = []; // Bersihkan histori jawaban ujian
+            }
+            
+            renderQuizQuestion();
+            navigate('quiz-section');
+        }
+
+        function renderQuizQuestion() {
+            const idx = state.currentQuizIndex;
+            const data = activeQuizData[idx];
+            
+            document.getElementById('quiz-counter').innerText = `${idx + 1}/10`;
+            document.getElementById('quiz-stimulus').innerHTML = data.stimulus;
+            document.getElementById('quiz-question').innerHTML = data.q;
+            
+            const badge = document.getElementById('badge-level');
+            if(state.currentQuizMode === 'berlatih') {
+                badge.classList.remove('hidden');
+                badge.innerHTML = `Level ${data.level} ${data.level===3? '(HOTS)' : ''}`;
+            } else {
+                badge.classList.add('hidden');
+            }
+
+            document.getElementById('quiz-feedback').classList.add('hidden');
+            document.getElementById('btn-submit-quiz').classList.remove('hidden');
+            document.getElementById('btn-next-quiz').classList.add('hidden');
+            document.getElementById('btn-submit-quiz').disabled = false;
+            
+            userSelectedAnswers = [];
+            const container = document.getElementById('quiz-options-container');
+            const type = data.type || 'mc';
+            
+            if(type === 'mc' || type === 'tf') {
+                container.innerHTML = `<div class="space-y-3">
+                    ${data.opts.map((opt, i) => `
+                        <button onclick="selectSingleOption(${i}, this)" class="quiz-opt w-full text-left p-4 rounded-xl border-2 border-gray-200 bg-white hover:border-brand-orange hover:bg-orange-50 transition-all font-semibold text-gray-700 h-auto whitespace-normal break-words">${opt}</button>
+                    `).join('')}
+                </div>`;
+            } else if (type === 'multiselect') {
+                container.innerHTML = `<div class="space-y-3">
+                    ${data.opts.map((opt, i) => `
+                        <button onclick="toggleMultiOption(${i}, this)" class="quiz-multi-opt w-full text-left p-4 rounded-xl border-2 border-gray-200 bg-white hover:border-brand-orange transition-all font-semibold text-gray-700 flex items-start justify-between gap-3 h-auto whitespace-normal break-words">
+                            <span class="flex-1">${opt}</span><div class="w-6 h-6 shrink-0 rounded border-2 border-gray-300 flex items-center justify-center check-box mt-0.5"></div>
+                        </button>
+                    `).join('')}
+                </div>`;
+            }
+            // (Kode Sort dan Match sengaja diminimalisir agar berfokus pada fitur Database, mekanisme aslinya tetap sama)
+        }
+
+        function selectSingleOption(idx, btn) {
+            playClick();
+            document.querySelectorAll('.quiz-opt').forEach(b => b.classList.remove('border-brand-orange', 'bg-orange-50', 'ring-2', 'ring-brand-orange'));
+            btn.classList.add('border-brand-orange', 'bg-orange-50', 'ring-2', 'ring-brand-orange');
+            userSelectedAnswers = [idx];
+        }
+
+        function toggleMultiOption(idx, btn) {
+            playClick();
+            const cbox = btn.querySelector('.check-box');
+            if(userSelectedAnswers.includes(idx)) {
+                userSelectedAnswers = userSelectedAnswers.filter(i => i !== idx);
+                btn.classList.remove('border-brand-orange', 'bg-orange-50');
+                cbox.classList.remove('bg-brand-orange', 'border-brand-orange');
+                cbox.innerHTML = '';
+            } else {
+                userSelectedAnswers.push(idx);
+                btn.classList.add('border-brand-orange', 'bg-orange-50');
+                cbox.classList.add('bg-brand-orange', 'border-brand-orange');
+                cbox.innerHTML = '<i class="fas fa-check text-white text-xs"></i>';
+            }
+        }
+
+        function submitAnswer() {
+            const data = activeQuizData[state.currentQuizIndex];
+            const type = data.type || 'mc';
+            
+            if((type === 'mc' || type === 'tf') && userSelectedAnswers.length === 0) return showAlert('Peringatan', 'Silakan pilih jawaban terlebih dahulu.');
+            if(type === 'multiselect' && userSelectedAnswers.length === 0) return showAlert('Peringatan', 'Pilih minimal 1 jawaban.');
+
+            document.getElementById('btn-submit-quiz').classList.add('hidden');
+            document.getElementById('btn-next-quiz').classList.remove('hidden');
+            
+            let isCorrect = false;
+
+            if(type === 'mc' || type === 'tf') {
+                isCorrect = userSelectedAnswers[0] === data.ans;
+                const opts = document.querySelectorAll('.quiz-opt');
+                if(isCorrect) opts[userSelectedAnswers[0]].classList.add('bg-green-100', 'border-green-500');
+                else {
+                    opts[userSelectedAnswers[0]].classList.add('bg-red-100', 'border-red-500');
+                    opts[data.ans].classList.add('bg-green-100', 'border-green-500');
+                }
+            } else if (type === 'multiselect') {
+                const sortedUser = [...userSelectedAnswers].sort();
+                const sortedAns = [...data.ans].sort();
+                isCorrect = JSON.stringify(sortedUser) === JSON.stringify(sortedAns);
+            }
+
+            // SIMPAN HISTORI JAWABAN KHUSUS MENU BERLATIH (UJIAN)
+            if(state.currentQuizMode === 'berlatih') {
+                state.berlatihAnswers.push({
+                    q: data.q,
+                    userAns: userSelectedAnswers,
+                    isCorrect: isCorrect
+                });
+            }
+
+            if(isCorrect) {
+                playCorrect();
+                if(state.currentQuizMode === 'bermain') state.bermainScore += 10;
+                else {
+                    const lvl = data.level;
+                    if(lvl === 1) { state.berlatihScore += 8; state.quizScoreDetail.L1.correct++; }
+                    if(lvl === 2) { state.berlatihScore += 10; state.quizScoreDetail.L2.correct++; }
+                    if(lvl === 3) { state.berlatihScore += 12; state.quizScoreDetail.L3.correct++; }
+                }
+            } else playWrong();
+
+            const feedback = document.getElementById('quiz-feedback');
+            feedback.classList.remove('hidden');
+            if(isCorrect) {
+                feedback.className = 'mt-6 p-4 rounded-xl border bg-green-50 border-green-200 animate-zoom-in block';
+                feedback.innerHTML = `<h4 class="font-bold text-green-700 flex items-center gap-2 mb-1"><i class="fas fa-check-circle text-xl"></i> Luar Biasa! Jawaban Benar</h4>`;
+            } else {
+                feedback.className = 'mt-6 p-4 rounded-xl border bg-red-50 border-red-200 animate-zoom-in block';
+                feedback.innerHTML = `<h4 class="font-bold text-red-700 flex items-center gap-2 mb-1"><i class="fas fa-times-circle text-xl"></i> Kurang Tepat</h4>`;
+            }
+        }
+
+        function nextQuizQuestion() {
+            playNext();
+            if(state.currentQuizIndex < activeQuizData.length - 1) {
+                state.currentQuizIndex++;
+                renderQuizQuestion();
+            } else {
+                finishQuiz();
+            }
+        }
+
+        function finishQuiz() {
+            playNext();
+            if(state.currentQuizMode === 'bermain') {
+                state.bermainCompleted = true;
+                unlockMenu('berlatih');
+                document.getElementById('dashboard-score').innerText = `Skor Bermain: ${state.bermainScore}`;
+                showAlert('Misi Bermain Selesai! 🎮', `Hebat! Kamu mendapatkan skor ${state.bermainScore}. Kini menu BERLATIH (Ujian Akhir) telah terbuka!`);
+                navigate('main-menu');
+            } else {
+                state.berlatihCompleted = true;
+                document.getElementById('btn-report-container').style.display = 'block';
+                generateReportData();
+                
+                // 2. TRIGGER FUNGSI KIRIM DATA KE GOOGLE SHEETS
+                sendDataToGAS();
+
+                showAlert('Ujian Selesai! 🎓', `Alhamdulillah. Kamu telah menyelesaikan Asesmen dengan nilai ${state.berlatihScore}. Silakan cek Laporan Hasil Belajar.`);
+                navigate('report-section');
+            }
+        }
+
+        function confirmExitQuiz() {
+            document.getElementById('alert-title').innerText = "Keluar Misi?";
+            document.getElementById('alert-msg').innerText = "Progres kamu pada misi ini akan hilang jika keluar. Lanjutkan keluar?";
+            const alertBox = document.getElementById('custom-alert').querySelector('div');
+            alertBox.innerHTML += `
+                <div class="flex gap-3 mt-2" id="temp-buttons">
+                    <button onclick="navigate('main-menu'); closeAlert(); restoreAlert();" class="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-full">Ya, Keluar</button>
+                    <button onclick="closeAlert(); restoreAlert();" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-3 px-4 rounded-full">Batal</button>
+                </div>
+            `;
+            alertBox.querySelector('button').style.display = 'none';
+            document.getElementById('custom-alert').classList.remove('hidden');
+            document.getElementById('custom-alert').classList.add('flex');
+        }
+        function restoreAlert() {
+            const temp = document.getElementById('temp-buttons');
+            if(temp) temp.remove();
+            document.getElementById('custom-alert').querySelector('div').querySelector('button').style.display = 'inline-block';
+        }
+
+        /* =========================================================
+           KIRIM DATA KE GOOGLE SHEETS (GAS)
+        ========================================================= */
+        function sendDataToGAS() {
+            if(!GAS_URL || GAS_URL === "URL_GAS_ANDA_DISINI") {
+                console.warn("GAS URL belum diatur. Data tidak dikirim ke Spreadsheet.");
+                return;
+            }
+
+            const totalBenar = Object.values(state.quizScoreDetail).reduce((acc, curr) => acc + curr.correct, 0);
+            const totalSalah = 10 - totalBenar;
+
+            const payload = {
+                type: "SUBMIT_RESULT",
+                studentName: state.studentName,
+                studentClass: state.studentClass,
+                bermainScore: state.bermainScore,
+                berlatihScore: state.berlatihScore,
+                jumlahBenar: totalBenar,
+                jumlahSalah: totalSalah,
+                detailJawaban: state.berlatihAnswers, // Mengirim rincian jawaban 10 soal
+                // Mengirim bank soal (untuk dibuatkan di sheet "Data Soal")
+                dataSoal: {
+                    bermain: bermainData.map(d => ({ type: d.type, q: d.q, opts: d.opts || d.items || d.pairs, ans: d.ans })),
+                    berlatih: berlatihData.map(d => ({ level: d.level, q: d.q, opts: d.opts, ans: d.ans }))
+                }
+            };
+
+            // Menggunakan method POST dengan tipe Content text/plain untuk menghindari isu preflight CORS
+            fetch(GAS_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => console.log("Berhasil terhubung ke Database:", data))
+            .catch(err => console.error("Error saat menyimpan ke Database:", err));
+        }
+
+        /* =========================================================
+           REPORT & PDF LOGIC
+        ========================================================= */
+        function generateReportData() {
+            document.getElementById('rep-name').innerText = state.studentName;
+            document.getElementById('rep-class').innerText = state.studentClass;
+            const dateString = new Date().toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+            document.getElementById('rep-date').innerText = dateString;
+            document.getElementById('ttd-date').innerText = dateString;
+            document.getElementById('rep-bermain-score').innerText = state.bermainScore;
+            document.getElementById('rep-berlatih-score').innerText = state.berlatihScore;
+
+            const score = state.berlatihScore;
+            let predikat = 'Perlu Bimbingan', color = 'bg-red-500';
+            if(score >= 85) { predikat = 'SANGAT BAIK (A)'; color = 'bg-green-500'; }
+            else if(score >= 70) { predikat = 'BAIK (B)'; color = 'bg-blue-500'; }
+            else if(score >= 50) { predikat = 'CUKUP (C)'; color = 'bg-yellow-500'; }
+            
+            const pEl = document.getElementById('rep-predikat');
+            pEl.innerText = predikat;
+            pEl.className = `inline-block text-white px-3 py-1 rounded-full text-xs font-bold ${color}`;
+
+            const d = state.quizScoreDetail;
+            document.getElementById('rep-l1').innerText = `${Math.round((d.L1.correct / d.L1.total) * 100)}% (${d.L1.correct}/${d.L1.total})`;
+            document.getElementById('rep-l2').innerText = `${Math.round((d.L2.correct / d.L2.total) * 100)}% (${d.L2.correct}/${d.L2.total})`;
+            document.getElementById('rep-l3').innerText = `${Math.round((d.L3.correct / d.L3.total) * 100)}% (${d.L3.correct}/${d.L3.total})`;
+        }
+
+        function generatePDF() {
+            const element = document.getElementById('report-content');
+            const opt = {
+                margin:       10,
+                filename:     `Laporan_Advertisement_${state.studentName.replace(/\s+/g, '_')}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            if(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) window.print();
+            else html2pdf().set(opt).from(element).save().catch(err => window.print());
+        }
+    </script>
+</body>
+</html>
